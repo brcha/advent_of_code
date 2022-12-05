@@ -11,6 +11,10 @@ impl Range {
     fn contains(&self, other: &Range) -> bool {
         self.start <= other.start && self.end >= other.end
     }
+
+    fn overlap(&self, other: &Range) -> bool {
+        self.start <= other.end && other.start <= self.end
+    }
 }
 
 impl FromStr for Range {
@@ -33,19 +37,28 @@ fn parse_line(line: &str) -> (Range, Range) {
     (first.parse().unwrap(), second.parse().unwrap())
 }
 
-fn process_line(line: &str) -> bool {
+fn process_line(line: &str) -> (bool, bool) {
     let (first, second) = parse_line(line);
-    fully_contained(&first, &second)
+    (fully_contained(&first, &second), first.overlap(&second))
 }
 
 fn main() {
     let mut count :u64 = 0;
+    let mut count_p2 :u64 = 0;
+
     for line in io::stdin().lines() {
         let input = line.unwrap();
-        if process_line(&input) {
+        let (p1, p2) = process_line(&input);
+
+        if p1 {
             count += 1;
+        }
+
+        if p2 {
+            count_p2 += 1;
         }
     }
 
     println!("Number of contained ranges is {}", count);
+    println!("Number of overlaping ranges is {}", count_p2);
 }
