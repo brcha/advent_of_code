@@ -64,6 +64,18 @@ fn replay_commands(stacks: &mut Vec<Vec<char>>, commands: &Vec<Command>) {
     }
 }
 
+fn replay_commands_part2(stacks: &mut Vec<Vec<char>>, commands: &Vec<Command>) {
+    for c in commands {
+        let mut temp_stack = Vec::new();
+        for _ in 0..c.count {
+            let val = stacks[c.from-1].pop().unwrap();
+            temp_stack.push(val);
+        }
+        temp_stack.reverse();
+        stacks[c.to-1].append(&mut temp_stack);
+    }
+}
+
 fn get_solution(stacks: &mut Vec<Vec<char>>) -> String {
     let mut res = String::new();
 
@@ -75,10 +87,18 @@ fn get_solution(stacks: &mut Vec<Vec<char>>) -> String {
 }
 
 fn main() {
-    let mut stacks = parse_stacks();
+    let stacks = parse_stacks();
     let commands = parse_commands();
-    replay_commands(&mut stacks, &commands);
-    let solution = get_solution(&mut stacks);
-    
-    println!("Solution is: {}", solution);
+
+    let mut stacks_p1 = stacks.clone();
+    replay_commands(&mut stacks_p1, &commands);
+    let solution = get_solution(&mut stacks_p1);
+
+    println!("Solution (part 1) is: {}", solution);
+
+    let mut stacks_p2 = stacks.clone();
+    replay_commands_part2(&mut stacks_p2, &commands);
+    let solution = get_solution(&mut stacks_p2);
+
+    println!("Solution (part 2) is: {}", solution);
 }
