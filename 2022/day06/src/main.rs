@@ -11,26 +11,42 @@ fn all_unique_chars(v: &VecDeque<char>) -> bool {
     v1_c.sort();
     let (v1_dedup, _) = v1_c.partition_dedup();
 
-    v1_dedup.len() == 4
+    v1_dedup.len() == v.len()
 }
 
 fn main() -> io::Result<()>{
     let mut input = String::new();
-    let mut marker = VecDeque::with_capacity(4);
+    let mut start_of_packet_marker = VecDeque::with_capacity(4);
+    let mut start_of_message_marker = VecDeque::with_capacity(14);
 
     io::stdin().read_line(&mut input)?;
 
     for (idx, ch) in input.chars().enumerate() {
         if idx < 4 {
-            marker.push_back(ch);
+            start_of_packet_marker.push_back(ch);
             continue;
         }
 
-        marker.pop_front();
-        marker.push_back(ch);
+        start_of_packet_marker.pop_front();
+        start_of_packet_marker.push_back(ch);
 
-        if all_unique_chars(&marker) {
-            println!("Marker appears at {}", idx+1);
+        if all_unique_chars(&start_of_packet_marker) {
+            println!("Start of packet marker appears at {}", idx+1);
+            break;
+        }
+    }
+
+    for (idx, ch) in input.chars().enumerate() {
+        if idx < 14 {
+            start_of_message_marker.push_back(ch);
+            continue;
+        }
+
+        start_of_message_marker.pop_front();
+        start_of_message_marker.push_back(ch);
+
+        if all_unique_chars(&start_of_message_marker) {
+            println!("Start of message marker appears at {}", idx+1);
             break;
         }
     }
