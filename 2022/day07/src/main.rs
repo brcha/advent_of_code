@@ -32,8 +32,7 @@ impl Directory {
         }
 
         for d in &mut self.subdirectories {
-            let mut d1 = d.borrow_mut();
-            self.size += d1.calculate_size();
+            self.size += d.borrow_mut().calculate_size();
         }
 
         for f in &self.files {
@@ -56,8 +55,7 @@ impl Directory {
 
     fn handle_cd(&self, name: &str) -> Option<Rc<RefCell<Directory>>> {
         for d in &self.subdirectories {
-            let d1 = d.borrow();
-            if d1.name == name {
+            if d.borrow().name == name {
                 return Some(d.clone());
             }
         }
@@ -72,11 +70,33 @@ impl Directory {
         }
 
         for d in &self.subdirectories {
-            let d1 = d.borrow();
-            sum_of_sizes += d1.find_sum_dirs(at_most);
+            sum_of_sizes += d.borrow().find_sum_dirs(at_most);
         }
 
         sum_of_sizes
+    }
+
+    fn find_smallest_dir_at_least(&self, at_least: u64) -> Option<u64> {
+        let mut smallest_dir_size = None;
+
+        if self.size >= at_least {
+            smallest_dir_size = Some(self.size);
+        }
+
+        for d in &self.subdirectories {
+            let subdir_size = d.borrow().find_smallest_dir_at_least(at_least);
+            if subdir_size.is_some() {
+                if smallest_dir_size.is_none() {
+                    smallest_dir_size = subdir_size;
+                } else {
+                    if subdir_size.unwrap() < smallest_dir_size.unwrap() {
+                        smallest_dir_size = subdir_size;
+                    }
+                }
+            }
+        }
+
+        smallest_dir_size
     }
 }
 
@@ -123,12 +143,24 @@ fn main() {
         }
     }
 
-    let mut root_mut = root.borrow_mut();
-    root_mut.calculate_size();
-    drop(root_mut);
+    root.borrow_mut().calculate_size();
 
-    let root1 = root.borrow();
-    let sum_of_dir_sizes = root1.find_sum_dirs(100000);
+    let sum_of_dir_sizes = root.borrow().find_sum_dirs(100000);
 
     println!("Sum of dirs at most 100000 is {}", sum_of_dir_sizes);
+
+    let total_space: u64 = 70000000;
+    let needed_space: u64 = 30000000;
+    let used_space = root.borrow().size;
+    let free_space = total_space - used_space;
+
+    if free_space >= needed_space {
+        println!("No need to free any space");
+    } else {
+        root.borrow().find_smallest_dir_at_least(needed_space - free_space)
+            .map_or_else(
+                || println!("Can't find the directory"),
+                |s| println!("Smallest space to be freed is {}", s)
+            );
+    }
 }
