@@ -136,6 +136,78 @@ impl<T: PartialOrd+Copy+PartialEq+Default+Display> Matrix<T> {
 
         result
     }
+
+    fn visibility_up(&self, row: usize, col: usize) -> u64 {
+        let mut up = 0;
+
+        for idx in (0..row).rev() {
+            up += 1;
+            if self[(idx, col)] >= self[(row, col)] {
+                break;
+            }
+        }
+
+        up
+    }
+
+    fn visibility_down(&self, row: usize, col: usize) -> u64 {
+        let mut down = 0;
+
+        for idx in row+1..self.height {
+            down += 1;
+            if self[(idx, col)] >= self[(row, col)] {
+                break;
+            }
+        }
+
+        down
+    }
+
+    fn visibility_left(&self, row: usize, col: usize) -> u64 {
+        let mut left = 0;
+
+        for idx in (0..col).rev() {
+            left += 1;
+            if self[(row, idx)] >= self[(row, col)] {
+                break;
+            }
+        }
+
+        left
+    }
+
+    fn visibility_right(&self, row: usize, col: usize) -> u64 {
+        let mut right = 0;
+
+        for idx in col+1..self.width {
+            right += 1;
+            if self[(row, idx)] >= self[(row, col)] {
+                break;
+            }
+        }
+
+        right
+    }
+
+    fn compute_visibility(&self) -> Matrix<u64> {
+        let mut v = Matrix::new();
+        v.height = self.height;
+        v.width = self.width;
+        v.data = (0..self.width*self.height).map(|_| Default::default()).collect();
+
+        for row in 0..self.height {
+            for col in 0..self.width {
+                let up = self.visibility_up(row, col);
+                let down = self.visibility_down(row, col);
+                let left = self.visibility_left(row, col);
+                let right = self.visibility_right(row, col);
+
+                v[(row, col)] = up * down * left * right;
+            }
+        }
+
+        v
+    }
 }
 
 impl<T: PartialOrd+Copy+PartialEq+Default+Display> Index<(usize, usize)> for Matrix<T> {
@@ -205,8 +277,15 @@ fn main() {
     }
 
     let checked = forrest.check_all();
-    
+
     let num_visible_trees = checked.into_iter().filter(|x| !*x).count();
 
     println!("Number of visible trees is {}", num_visible_trees);
+
+    let visibility = forrest.compute_visibility();
+
+
+    let max_visibility = visibility.into_iter().max().unwrap();
+
+    println!("Maximum visibility is {}", max_visibility);
 }
